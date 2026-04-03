@@ -17,4 +17,8 @@ def ask_question(request: QueryRequest):
     return {
         "question": request.query,
         "answer": result["answer"]
+
+@app.get("/")
+def root():
+    return {"message": "RAG API running"}
     }
