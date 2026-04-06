@@ -17,9 +17,17 @@ def ask_question(request: QueryRequest):
     return {
         "question": request.query,
         "answer": result["answer"]
+<<<<<<< HEAD
            }
+=======
+         }
+>>>>>>> e20acc2 (Fixed imports, FastAPI server running)
 
 @app.get("/")
 def root():
     return {"message": "RAG API running"}
+<<<<<<< HEAD
     
+=======
+   
+>>>>>>> e20acc2 (Fixed imports, FastAPI server running)
