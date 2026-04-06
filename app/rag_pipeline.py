@@ -1,5 +1,5 @@
-from retriever import Retriever
-from llm import LLMHandler
+from app.retriever import Retriever
+from app.llm import LLMHandler
 
 
 class RAGPipeline:
