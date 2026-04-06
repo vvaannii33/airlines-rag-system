@@ -17,9 +17,25 @@ def ask_question(request: QueryRequest):
     return {
         "question": request.query,
         "answer": result["answer"]
+<<<<<<< HEAD
          }
+=======
+<<<<<<< HEAD
+           }
+=======
+         }
+>>>>>>> e20acc2 (Fixed imports, FastAPI server running)
+>>>>>>> 8978cd45a4cb4145f3d3d7209074790aaf39e0a0
 
 @app.get("/")
 def root():
     return {"message": "RAG API running"}
+<<<<<<< HEAD
    
+=======
+<<<<<<< HEAD
+    
+=======
+   
+>>>>>>> e20acc2 (Fixed imports, FastAPI server running)
+>>>>>>> 8978cd45a4cb4145f3d3d7209074790aaf39e0a0
