@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from app.rag_pipeline import RAGPipeline
+import asyncio
 
 app = FastAPI()
 
@@ -12,30 +13,13 @@ class QueryRequest(BaseModel):
 
 
 @app.post("/ask")
-def ask_question(request: QueryRequest):
+async def ask_question(request: QueryRequest):
+    await asyncio.sleep(3)  #simulate delay
     result = pipeline.run(request.query)
     return {
-        "question": request.query,
-        "answer": result["answer"]
-<<<<<<< HEAD
+        "message" : "done"
          }
-=======
-<<<<<<< HEAD
-           }
-=======
-         }
->>>>>>> e20acc2 (Fixed imports, FastAPI server running)
->>>>>>> 8978cd45a4cb4145f3d3d7209074790aaf39e0a0
 
 @app.get("/")
 def root():
     return {"message": "RAG API running"}
-<<<<<<< HEAD
-   
-=======
-<<<<<<< HEAD
-    
-=======
-   
->>>>>>> e20acc2 (Fixed imports, FastAPI server running)
->>>>>>> 8978cd45a4cb4145f3d3d7209074790aaf39e0a0
