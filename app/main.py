@@ -26,17 +26,17 @@ def ask_question(request: QueryRequest):
         if not result["context_docs"]:
             raise HTTException(status_code=404, detail ="No relevant documents found")
 
+        return {
+            "question" : request.query,
+            "answer" : result["answer"]
+         }
+
         except ConnectionError:
             raise HTTPException(status_code=503, detail ="Network Error")
 
         except TimeoutError:
             raise HTTPException(status_code=408, detail ="Request timed out")
 
-
-        return {
-            "question" : request.query,
-            "answer" : result["answer"]
-         }
 
     except HTTPException:
         raise 
