@@ -27,7 +27,7 @@ def ask_question(request: QueryRequest):
             raise HTTException(status_code=404, detail ="No relevant documents found")
 
         except ConnectionError:
-            raise HTTException(status_code=503, detail ="Network Error")
+            raise HTTPException(status_code=503, detail ="Network Error")
 
         except TimeoutError:
             raise HTTPException(status_code=408, detail ="Request timed out")
