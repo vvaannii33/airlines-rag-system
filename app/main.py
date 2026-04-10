@@ -31,11 +31,11 @@ def ask_question(request: QueryRequest):
             "answer" : result["answer"]
          }
 
-        except ConnectionError:
-            raise HTTPException(status_code=503, detail ="Network Error")
+    except ConnectionError:
+        raise HTTPException(status_code=503, detail ="Network Error")
 
-        except TimeoutError:
-            raise HTTPException(status_code=408, detail ="Request timed out")
+    except TimeoutError:
+         raise HTTPException(status_code=408, detail ="Request timed out")
 
 
     except HTTPException:
