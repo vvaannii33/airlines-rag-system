@@ -49,7 +49,7 @@ def ask_question(request: QueryRequest):
 def root():
     return {"message": "RAG API running"}
 
-@app.get("/health"):
+@app.get("/health")
 def health():
     return {"status": "ok"}
 
