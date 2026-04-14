@@ -14,13 +14,12 @@ class QueryRequest(BaseModel):
 
 @app.post("/ask")
 def ask_question(request: QueryRequest):
-    try:
-        if not request.query.strip():
-            raise HTTPException(status_code=400, detail ="Query cannot be empty")
 
         result = pipeline.run(request.query)
 
-        if not result["answer"]:
+        try:
+
+        if not result.get["answer"]:
             raise HTTPException(status_code=404, detail ="No answer generated")
 
         if not result["context_docs"]:
