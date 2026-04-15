@@ -1,41 +1,40 @@
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts import PromptTemplate
+# app/llm.py
+
+from openai import OpenAI
 import os
 from dotenv import load_dotenv
 
+# Load environment variables
 load_dotenv()
 
-api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
-class LLMHandler:
-    def __init__(self):
+class LLMService:
+    def generate_response(self, context: str, query: str) -> str:
         """
-        Initialize LLM
+        Generates answer using OpenAI
         """
-        self.llm = ChatOpenAI(temperature=0)
 
-        self.prompt = PromptTemplate(
-            input_variables=["context", "question"],
-            template="""
-You are an airline assistant.
+        prompt = f"""
+        You are a helpful assistant.
 
-Use the following context to answer the question.
-If the answer is not in the context, say "I don't know".
+        Use the context below to answer the question.
+        If answer is not in context, say "I don't know".
 
-Context:
-{context}
+        Context:
+        {context}
 
-Question:
-{question}
+        Question:
+        {query}
+        """
 
-Answer:
-"""
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3
         )
 
-    def generate_response(self, context: str, question: str):
-        """
-        Generate answer from LLM
-        """
-        prompt = self.prompt.format(context=context, question=question)
-        return self.llm.predict(prompt)
+        return response.choices[0].message.content
