@@ -16,16 +16,20 @@ class RAGPipeline:
         3. Generate answer
         """
 
-        #docs = self.retriever.get_relevant_docs(query)
+        #retrieve relevant docs based on query
+        docs = self.retriever.get_relevant_docs(query)
 
-        docs = ["UNICEF stands for the United Nations International Children's Emergency Fund",
-        "Probation is a trail process before full employment. It was created to evaluate the employee's performance and fit within the company culture. The duration of probation can vary but typically lasts between 3 to 6 months. During this period, employees may receive additional training and support to help them succeed in their role. At the end of the probation period, a performance review is conducted to determine if the employee will be offered a permanent position or if their employment will be terminated."] 
+        #convert docs to context string for LLM input
+        context = "\n\n".join(f"Document {i+1} : {doc}" for i,doc in enumerate(docs))
 
-        context = "\n\n".join(docs)
+        #LCEL call to generate answer
+        response = self.chain.invoke({
+         "context": context,
+         "question": query
+        })
 
-        response = self.llm.generate_response(context, query)
-
+        #return answer and source docs
         return {
-    "answer": response,
-    "context_docs": docs
-}
+        "answer": response,
+        "context_docs": [doc.page_content for doc in docs]
+        }

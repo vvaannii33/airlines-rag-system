@@ -29,8 +29,7 @@ def ask_question(request: QueryRequest):
 
             return QueryResponse(
             question = request.query,
-            answer = result["answer"],
-            context_docs =result["context_docs"]
+            answer = result["answer"]
             )
 
         except ConnectionError:
