@@ -6,6 +6,7 @@ from app.lcel_chain import LCELChain
 class RAGPipeline:
     def __init__(self):
         self.retriever = Retriever()
+        self.chain = LCELChain()
 
     def run(self, query: str):
         """
@@ -22,7 +23,7 @@ class RAGPipeline:
         context = "\n\n".join(f"Document {i+1} : {doc}" for i,doc in enumerate(docs))
 
         #LCEL call to generate answer
-        response = LCELChain().run(context, query)
+        response = self.chain.run(context, query)
 
         #return answer and source docs
         return {
