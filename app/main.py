@@ -4,8 +4,9 @@ from pydantic import BaseModel
 from app.rag_pipeline import RAGPipeline
 from app.schemas import QueryResponse
 
-app = FastAPI()
 
+
+app = FastAPI()
 pipeline = RAGPipeline()
 
 
@@ -29,7 +30,8 @@ def ask_question(request: QueryRequest):
 
             return QueryResponse(
             question = request.query,
-            answer = result["answer"]
+            answer = result["answer"],
+            context_docs = result["context_docs"]
             )
 
         except ConnectionError:

@@ -3,8 +3,11 @@ from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 
 
-def build_chain():
-    prompt = ChatPromptTemplate.from_template(
+class LCELChain:
+
+    def __init__(self):
+        
+        self.prompt = ChatPromptTemplate.from_template(
         """
         Answer the question based only on the context below.
         If the answer is not in the context, say "I don't know".
@@ -15,12 +18,16 @@ def build_chain():
         Question:
         {question}
         """
-    )
+        )
 
-    llm = ChatOpenAI(model="gpt-4o-mini")
+        self.llm = ChatOpenAI(model="gpt-4o-mini")
 
-    parser = StrOutputParser()
+        self.parser = StrOutputParser()
 
-    chain = prompt | llm | parser
+        self.chain = self.prompt | self.llm | self.parser
 
-    return chain
+    def run(self,context,question):
+        return self.chain.invoke({
+         "context": context,
+         "question": question
+        })

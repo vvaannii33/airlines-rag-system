@@ -1,12 +1,11 @@
 from app.retriever import Retriever
-from app.llm import LLMService
 from app.schemas import QueryResponse
+from app.lcel_chain import LCELChain
 
 
 class RAGPipeline:
     def __init__(self):
         self.retriever = Retriever()
-        self.llm = LLMService()
 
     def run(self, query: str):
         """
@@ -23,13 +22,10 @@ class RAGPipeline:
         context = "\n\n".join(f"Document {i+1} : {doc}" for i,doc in enumerate(docs))
 
         #LCEL call to generate answer
-        response = self.chain.invoke({
-         "context": context,
-         "question": query
-        })
+        response = LCELChain().run(context, query)
 
         #return answer and source docs
         return {
         "answer": response,
-        "context_docs": [doc.page_content for doc in docs]
+        "context_docs": docs
         }
