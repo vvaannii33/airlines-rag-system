@@ -2,12 +2,18 @@ from fastapi import FastAPI
 from fastapi import HTTPException
 from pydantic import BaseModel
 from app.rag_pipeline import RAGPipeline
+from app.hybrid_pipeline import HybridPipeline
 from app.schemas import QueryResponse
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 
 app = FastAPI()
-pipeline = RAGPipeline()
+pipeline = HybridPipeline()
 
 
 class QueryRequest(BaseModel):
