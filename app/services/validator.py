@@ -40,5 +40,6 @@ class SQLValidator:
             return True, "Safe"
 
         except Exception as e:
-            return False, f"Parsing error: {str(e)}"
             logger.error(f"Execution Error: {str(e)}")
+            return False, f"Parsing error: {str(e)}"
+            

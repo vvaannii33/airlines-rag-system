@@ -16,19 +16,21 @@ class QueryExecutor:
             logger.info(f"Query Result: {result}")
 
             if result == [] or result is None or (isinstance(result,str) and result.strip() == ""):
-                
+
+                logger.info("Query returned no results")
                 return ({
                     "sql" : sql_query,
                     "result" : "No relevant data found for this query."
                 })
-                logger.info("Query returned no results")
+                
 
         except Exception as e:
+            logger.error(f"Execution Error: {str(e)}")
             return ({
                 "sql" : sql_query,
                 "result" : f"Invalid query. Please check your question and try again. Error: {str(e)}"
             })
-            logger.error(f"Execution Error: {str(e)}")
+            
 
         sql_query = sql_query.replace("```sql","").replace("```","").strip() 
 
