@@ -9,6 +9,7 @@ import sqlparse
 from sqlparse.tokens import Keyword
 from app.logger_config import logger
 import time
+from app.services.validator import SQLValidator
 
 load_dotenv()
 
@@ -46,8 +47,7 @@ class SQLChain:
         - When filtering by time only (e.g., "after 10 AM"), extract and compare only the time component from datetime columns.
         - If the questions mentions only after or before with a time, compare only with the greater or lesser time component of the datetime column respectively.
         - When both date and time are mentioned, use full datetime comparison.
-        - If the question does not make sense or is out of context, return "Invalid question"
-        - If the question is unrelated to the database schema, return "I don't know"
+        - If the question does not make sense or is out of context, return "Invalid question". Do NOT attempt to answer it from the context.
         - If the question is ambiguous or lacks details, return "Please provide more details"
         - If the user asks to add data → generate INSERT query
         - If the user asks to modify data → generate UPDATE query
@@ -66,47 +66,8 @@ class SQLChain:
 
         self.query_tool = QuerySQLDataBaseTool(db=self.db)
 
-    def validate_sql(self, sql_query: str, user_role: str = "user"):
-        try:
-            parsed = sqlparse.parse(sql_query)
-        
-        
+        self.validator = SQLValidator()
 
-            if not parsed:
-                return False, "Invalid SQL"
-
-            for stmt in parsed:
-                #Detect query type (SELECT / INSERT / etc)
-                first_token = None
-                for token in stmt.tokens:
-                    if not token.is_whitespace:
-                        first_token = token
-                        break
-
-                if first_token is None:
-                    return False, "Empty query"
-
-                query_type = first_token.value.upper()
-
-                #Block non-read queries for non-admin
-                if user_role != "admin":
-                    if query_type not in ["SELECT", "WITH", "EXPLAIN"]:
-                        return False, f"{query_type} not allowed"
-
-                #Block destructive keywords even if hidden
-                blocked_operations = ["INSERT", "UPDATE", "DELETE", "DROP", "TRUNCATE", "ALTER", "CREATE"]
-
-                for token in stmt.tokens:
-                    token_value = str(token.value).upper().strip()
-                    if any(op in token_value for op in blocked_operations):
-                        if user_role != "admin":
-                            return False, f"{token_value} operation not allowed"
-
-            return True, "Safe"
-
-        except Exception as e:
-            return False, f"Parsing error: {str(e)}"
-            logger.error(f"Execution Error: {str(e)}")
 
     def run(self, question: str):
 
@@ -119,20 +80,18 @@ class SQLChain:
             "schema" : self.schema
         })
 
-        logger.info(f"Generated SQL query: {sql_query}")
+        logger.info(f"Generated SQL query: {sql_query}")      
 
-        
-
-        if sql_query.lower() in == "invalid question":
+        if sql_query.lower() == "invalid question":
             return ({
                 "sql": None,
                 "result": "Invalid question" })
             logger.warning("LLM returned invalid question")
 
-        if sql_query.lower() in ["i don't know", "please provide more details"]:
+        if sql_query.lower() == "please provide more details":
             return ({
                 "sql": None,
-                "result": "I don't know" })
+                "result": "Please provide more details" })
             logger.warning(f"LLM Response: {sql_query}")
 
 
@@ -144,7 +103,7 @@ class SQLChain:
                 "result": "Query references unknown tables."
             }
 
-        is_valid, message = self.validate_sql(sql_query)
+        is_valid, message = self.validator.validate_sql(sql_query)
         if not is_valid:
             logger.warning(f"Blocked Query: {sql_query}")
             logger.warning(f"Validation Result: {message}")

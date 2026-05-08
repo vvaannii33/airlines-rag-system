@@ -7,7 +7,7 @@ class LLMService:
     def __init__(self):
         self.prompt = ChatPromptTemplate.from_template("""
         Answer the question based only on the context below.
-        If the answer is not in the context, say "I don't know".
+        If the question is out of context, say "Invalid question".
         Do NOT display line breaks (\n) in the response. Use bullet points instead.
         Answer should be in a point-wise, structured and clear format.
 

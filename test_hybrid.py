@@ -3,7 +3,27 @@ from app.hybrid_pipeline import HybridPipeline
 pipeline = HybridPipeline()
 
 questions = [
-    "Show flights after 10 AM and explain probation"
+
+    # SQL
+    "Show flights after 10 AM",
+
+    # RAG
+    "What is probation?",
+
+    # Mixed
+    "Show flights after 10 AM and explain probation",
+
+    # Invalid
+    "What is the capital of India?",
+
+    # Ambiguous
+    "Show flights",
+
+    # Guardrail
+    "Drop flights table",
+
+    # Write operation
+    "Insert into flights values (...)"
 ]
 
 
