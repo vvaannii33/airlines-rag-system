@@ -1,22 +1,12 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
+from app.prompts.rag_prompt import rag_prompt
 
 
 class LLMService:
     def __init__(self):
-        self.prompt = ChatPromptTemplate.from_template("""
-        Answer the question based only on the context below.
-        If the question is out of context, say "Invalid question".
-        Do NOT display line breaks (\n) in the response. Use bullet points instead.
-        Answer should be in a point-wise, structured and clear format.
-
-        Context:
-        {context}
-
-        Question:
-        {question}
-        """)
+        
 
         self.llm = ChatOpenAI(
             model="gpt-4o-mini",
@@ -24,6 +14,8 @@ class LLMService:
         )
 
         self.parser = StrOutputParser()
+
+        self.prompt = rag_prompt
 
         self.chain = self.prompt | self.llm | self.parser
 
