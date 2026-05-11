@@ -1,6 +1,8 @@
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from app.exceptions.custom_exceptions import RetrievalError
+from app.utils.logger_config import logger
 
 
 class Retriever:
@@ -36,4 +38,11 @@ class Retriever:
 
     def get_relevant_docs(self, query):
         results = self.vectorstore.similarity_search(query, k=2)
-        return [doc.page_content for doc in results]
+        try:
+            logger.info(f"[RETRIEVER] Retrieved {len(results)} documents for query: {query}")
+            return [doc.page_content for doc in results]
+        except Exception as e:
+            logger.error(f"[RETRIEVER] Error retrieving documents for query: {query} | Error: {str(e)}")
+            raise RetrievalError(f"Error retrieving documents: {str(e)}")
+
+        

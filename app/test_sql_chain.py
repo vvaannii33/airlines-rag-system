@@ -1,4 +1,4 @@
-from app.services.sql_chain import SQLChain
+from app.chains.sql_chain import SQLChain
 
 chain = SQLChain()
 
