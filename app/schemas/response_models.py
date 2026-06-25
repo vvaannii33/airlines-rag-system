@@ -8,6 +8,11 @@ class SQLResponse(BaseModel):
 class RAGResponse(BaseModel):
     answer: str
     context_docs: List[str]
+    retrieval_time: float
+    generation_time: float
+    total_time: float
+    total_tokens: int
+    cost: float
 
 class HybridResponse(BaseModel):
     source: str
@@ -19,3 +24,7 @@ class ErrorResponse(BaseModel):
     source: str | None = None
     details: str | None = None
 
+class QueryResponse(BaseModel):
+    question: str
+    answer: str
+    context_docs: List[str]

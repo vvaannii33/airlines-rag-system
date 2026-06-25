@@ -1,18 +1,27 @@
-from fastapi import FastAPI
-from fastapi import HTTPException
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from app.rag_pipeline import RAGPipeline
-from app.hybrid_pipeline import HybridPipeline
-from app.schemas import QueryResponse
 from dotenv import load_dotenv
 import os
+from app.hybrid_pipeline import HybridPipeline
+from app.services.rag_pipeline import RAGPipeline
+from app.schemas.response_models import QueryResponse,SQLResponse
+import uuid
+from fastapi.responses import StreamingResponse
+from app.utils.logger_config import logger
+import time
+
+request_counter = {}
 
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
+app = FastAPI(
+    title="Airlines RAG API",
+    version="1.0.0",
+    description="RAG-powered AI Question Answering System"
+)
 
-app = FastAPI()
 pipeline = HybridPipeline()
 
 
@@ -21,43 +30,120 @@ class QueryRequest(BaseModel):
 
 
 @app.post("/ask", response_model=QueryResponse)
-def ask_question(request: QueryRequest):
+async def ask_question(request: QueryRequest):
 
-        result = pipeline.run(request.query)
+    try:
+        request_id = str(uuid.uuid4())[:8]
+        print(f"\n[REQUEST ID: {request_id}] Received query: {request.query}")
 
-        try:
+        client_ip = "local"
 
-            if not result.get("answer"):
-                 raise HTTPException(status_code=404, detail ="No answer generated")
+        current_time = time.time()
 
-            if not result.get("context_docs"):
-                raise HTTPException(status_code=404, detail ="No relevant documents found")
-            
+        if client_ip not in request_counter:
+            request_counter[client_ip] = []
 
-            return QueryResponse(
-            question = request.query,
-            answer = result["answer"],
-            context_docs = result["context_docs"]
+        request_counter[client_ip] = [
+        t for t in request_counter[client_ip]
+        if current_time - t < 60
+        ]
+
+        if len(request_counter[client_ip]) >= 10:
+            logger.warning(f"[RATING] Rate limit exceeded for IP: {client_ip}")
+            raise HTTPException(
+                status_code=429,
+                detail="Rate limit exceeded. Try again later."
             )
 
-        except ConnectionError:
-             raise HTTPException(status_code=503, detail ="Network Error")       
+        request_counter[client_ip].append(current_time)
 
-        except TimeoutError:
-            raise HTTPException(status_code=408, detail ="Request timed out")
-
-        except HTTPException:
-            raise
-
-        except Exception as e:
-            raise HTTPException(status_code=500, detail ="Internal Error:" + str(e))
+        result = pipeline.run(request.query,request_id)
         
+
+        source = result["source"]
+        response = result["response"]
+        
+
+        if source =="sql":
+            return SQLResponse(
+                sql=request.query,
+                result=response
+            )
+
+        elif source == "rag":
+
+            if not response.answer:
+                raise HTTPException(
+                    status_code=404,
+                    detail="No answer generated"
+                )
+
+            if not response.context_docs:
+                raise HTTPException(
+                    status_code=404,
+                    detail="No relevant documents found"
+                )
+
+            return QueryResponse(
+                question=request.query,
+                answer=response.answer,
+                context_docs=response.context_docs
+            )
+
+    except ConnectionError:
+        raise HTTPException(
+            status_code=503,
+            detail="Network Error"
+        )
+
+    except TimeoutError:
+        raise HTTPException(
+            status_code=408,
+            detail="Request timed out"
+        )
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Internal Error: " + str(e)
+        )
+'''
+def fake_stream():
+
+    for word in [
+        "Hello ",
+        "this ",
+        "is ",
+        "a ",
+        "streaming ",
+        "response."
+    ]:
+        yield word
+        print(f"Streaming: {word.strip()}")
+        time.sleep(0.05)
+'''
 
 @app.get("/")
 def root():
-    return {"message": "RAG API running"}
+    return {
+        "message": "RAG API running"
+    }
+
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {
+        "status": "ok"
+    }
 
+
+@app.get("/stream")
+def stream():
+
+    return StreamingResponse(
+        fake_stream(),
+        media_type="text/plain"
+    )

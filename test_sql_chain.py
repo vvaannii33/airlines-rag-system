@@ -1,14 +1,12 @@
-from app.services.sql_chain import SQLChain
+from app.chains.sql_chain import SQLChain
 
-chain = SQLChain()
+sql_chain = SQLChain()
 
-# Test questions
 questions = [
-    "What is probation?"
-]
+    "List all the table names present in the database" ]
+
 
 for q in questions:
     print("\nQuestion:", q)
-    response = chain.run(q)
-    print("Generated SQL:", response["sql"])
-    print("Result:", response["result"])
+    response = sql_chain.run(q)
+    print("Response:", response)

@@ -23,7 +23,7 @@ class HybridPipeline:
                 return parts[0].strip(), parts[1].strip()
         return question, None
 
-    def run(self, question: str):
+    def run(self, question: str, request_id: str):
         start_time = time.time()
 
         route = self.router.route(question)

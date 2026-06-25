@@ -1,3 +1,4 @@
+import sqlparse
 from langchain_core.output_parsers import StrOutputParser
 from langchain_community.utilities import SQLDatabase
 from langchain_openai import ChatOpenAI
@@ -10,14 +11,13 @@ from app.services.query_executor import QueryExecutor
 from app.prompts.sql_prompt import sql_prompt
 from app.schemas.response_models import ErrorResponse
 from app.exceptions.custom_exceptions import ValidationError, QueryExecutionError
+from langchain_community.callbacks.manager import get_openai_callback
 
 load_dotenv()
 
 class SQLChain:
     def __init__(self):
-        self.db = SQLDatabase.from_uri(
-            "postgresql+psycopg2://admin:admin@localhost:5432/airlines"
-        )
+        self.db = SQLDatabase.from_uri(os.getenv("LOCAL_DATABASE_URL"))
 
         self.schema = self.db.get_table_info()
 
@@ -43,15 +43,44 @@ class SQLChain:
 
         logger.info(f"[SQL_CHAIN] User question: {question}")
 
-        sql_query = self.chain.invoke({
+        with get_openai_callback() as cb:
+
+            sql_query = self.chain.invoke({
             "question": question,
             "schema" : self.schema
-        })
+            })
+            execution_time = round(time.time() - start_time,2)
+
+            logger.info(
+            f"[TOKEN_USAGE][SQL] Prompt Tokens: {cb.prompt_tokens}"
+            )
+
+            logger.info(
+            f"[TOKEN_USAGE][SQL] Completion Tokens: {cb.completion_tokens}"
+            )
+
+            logger.info(
+            f"[TOKEN_USAGE][SQL] Total Tokens: {cb.total_tokens}"
+            )
+
+            logger.info(
+            f"[TOKEN_USAGE][SQL] Total Cost (USD): ${cb.total_cost}"
+            )
+
+            if cb.total_cost > 0.00012:
+                logger.warning(f"[SQL_CHAIN][HIGH_COST] High cost detected: ${cb.total_cost:.6f} for question: {question}")
+
+            logger.info(
+            f"[OBSERVABILITY][SQL] Tokens={cb.total_tokens} | Cost=${cb.total_cost} | Time={execution_time}s"
+            )
+
+            if cb.total_tokens > 3000:
+                logger.warning(f"[SQL_CHAIN] High token usage detected: {cb.total_tokens} tokens for question: {question}")
 
         logger.info(f"[SQL_CHAIN] Generated SQL query: {sql_query}")      
 
         if sql_query.lower() == "invalid question":
-            logger.warning(f"[SQL_CHAIN] LLM returned invalid question")
+            logger.warning(f"[SQL_CHAIN] Invalid question")
             return ErrorResponse(
                 error="Invalid question",
                 source="sql"
@@ -78,7 +107,7 @@ class SQLChain:
         try:
             self.validator.validate_sql(sql_query)
         except ValidationError as e:
-            logger.warning(f"[SQL_CHAIN] Validation failed | Query: {sql_query} | Reason: {str(e)}")
+            logger.error(f"[SQL_CHAIN] Validation failed | Query: {sql_query} | Reason: {str(e)}")
             return ErrorResponse(
                 error="Query validation failed",
                 source="sql",
@@ -88,7 +117,26 @@ class SQLChain:
         logger.info(f"[SQL_CHAIN] SQL query validated successfully. Executing query: {sql_query}")
 
         try:
+            logger.info(f"[SQL_CHAIN] Query executing | Query: {sql_query}")
             return self.query_executor.query_executor(sql_query)
+            query_execution_time = round(time.time() - start_time,2)
+            logger.info(
+            f"""
+            ==================================================
+            REQUEST SUMMARY
+            ==================================================
+            Question: {question}
+            Route: SQL
+
+            Execution Time: {execution_time:.2f}s
+
+            Tokens: {total_tokens}
+            Cost: ${cost:.6f}
+
+            Status: SUCCESS
+            ==================================================
+            """
+            )
         except QueryExecutionError as e:
             logger.warning(f"[SQL_CHAIN] Query execution error | Query: {sql_query} | Reason: {str(e)}")
             raise QueryExecutionError(str(e))

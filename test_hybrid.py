@@ -4,29 +4,9 @@ pipeline = HybridPipeline()
 
 questions = [
 
-    # SQL
-    "Show flights after 10 AM",
-
-    # RAG
-    "What is probation?",
-
-    # Mixed
-    "Show flights after 10 AM and explain probation",
-
-    # Invalid
-    "What is the capital of India?",
-
-    # Ambiguous
-    "Show flights",
-
-    # Guardrail
-    "Drop flights table",
-
-    # Write operation
-    "Insert into flights values (...)"
+    
+    "Show me all the flights available"
 ]
-
-
 
 for q in questions:
     print("\nQuestion:", q)
